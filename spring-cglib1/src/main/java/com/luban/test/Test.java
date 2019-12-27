@@ -12,6 +12,7 @@ public class Test {
 				annotationConfigApplicationContext
 				= new AnnotationConfigApplicationContext(AppConfig.class);
 //		annotationConfigApplicationContext.refresh();
-		System.out.println(annotationConfigApplicationContext.getBean(TestService.class));
+		TestService bean = annotationConfigApplicationContext.getBean(TestService.class);
+		System.out.println(bean);
 	}
 }
