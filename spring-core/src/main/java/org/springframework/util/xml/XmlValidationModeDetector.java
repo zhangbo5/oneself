@@ -98,6 +98,7 @@ public class XmlValidationModeDetector {
 				if (this.inComment || !StringUtils.hasText(content)) {
 					continue;
 				}
+				//Spring检测验证模式的办法就是判断是否包含DOCTYPE，如果包含就是DTD（VALIDATION_DTD），否则就是XSD（VALIDATION_XSD）
 				if (hasDoctype(content)) {
 					isDtdValidated = true;
 					break;
