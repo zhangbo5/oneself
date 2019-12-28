@@ -174,8 +174,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+		//从缓存中加载
 		Object singletonObject = this.singletonObjects.get(beanName);
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+			//如果为空，则锁定全局变量并进行处理
 			synchronized (this.singletonObjects) {
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
@@ -202,8 +204,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(beanName, "Bean name must not be null");
 		synchronized (this.singletonObjects) {
+			//1. 检查缓存是否已经加载过 。
 			Object singletonObject = this.singletonObjects.get(beanName);
 			if (singletonObject == null) {
+				//2. 若没有加载，则记录 beanName 的正在加载状态 。
 				if (this.singletonsCurrentlyInDestruction) {
 					throw new BeanCreationNotAllowedException(beanName,
 							"Singleton bean creation not allowed while singletons of this factory are in destruction " +
@@ -212,6 +216,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
+				//3 . 加载单例前记录加载状态 。
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -219,6 +224,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
+					//初始化bean
+					//4. 通过调用参数传入的 ObjectFactory 的getObject()方法实例化bean。
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				}
@@ -242,12 +249,16 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					if (recordSuppressedExceptions) {
 						this.suppressedExceptions = null;
 					}
+					//5.加载单例后的处理方法调用
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
+					//加入缓存
+					//6. 将结果记录至缓存并删除加载 bean 过程中所记录的各种辅助状态 。
 					addSingleton(beanName, singletonObject);
 				}
 			}
+			//7. 返回处理结果 。
 			return singletonObject;
 		}
 	}

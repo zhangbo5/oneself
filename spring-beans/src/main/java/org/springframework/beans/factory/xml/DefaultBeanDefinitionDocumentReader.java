@@ -95,6 +95,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		this.readerContext = readerContext;
 		logger.debug("Loading bean definitions");
 		Element root = doc.getDocumentElement();
+		//核心逻辑：真正开始bean的解析
 		doRegisterBeanDefinitions(root);
 	}
 
@@ -143,8 +144,11 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 				}
 			}
 		}
-
+		//处理"profile"（PROFILE_ATTRIBUTE）
+		//preProcessXml(root),postProcessXml(root)两个方法是空方法，这里使用模板方法模式，
+		//如果继承自 DefaultBeanDefinitionDocumentReader 的子类需要在Bean解析前后做一些处理的话，那么只需要重写这两个方法就可以了。
 		preProcessXml(root);
+		//开始解析，分：默认命名、自定义命名空间 两种情况
 		parseBeanDefinitions(root, this.delegate);
 		postProcessXml(root);
 
@@ -165,22 +169,25 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * @param root the DOM root element of the document
 	 */
 	protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
-		if (delegate.isDefaultNamespace(root)) {
+		if (delegate.isDefaultNamespace(root)) { //判断根节点是否是默认命名空间
 			NodeList nl = root.getChildNodes();
 			for (int i = 0; i < nl.getLength(); i++) {
 				Node node = nl.item(i);
 				if (node instanceof Element) {
 					Element ele = (Element) node;
-					if (delegate.isDefaultNamespace(ele)) {
+					if (delegate.isDefaultNamespace(ele)) { //判断子节点是否是默认命名空间
+						//默认命名空间的解析
 						parseDefaultElement(ele, delegate);
 					}
 					else {
+						//自定义命名空间的解析
 						delegate.parseCustomElement(ele);
 					}
 				}
 			}
 		}
 		else {
+			//自定义命名空间的解析
 			delegate.parseCustomElement(root);
 		}
 	}
@@ -287,12 +294,14 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		}
 		if (valid) {
 			try {
+				//注册alias
 				getReaderContext().getRegistry().registerAlias(name, alias);
 			}
 			catch (Exception ex) {
 				getReaderContext().error("Failed to register alias '" + alias +
 						"' for bean with name '" + name + "'", ele, ex);
 			}
+			//别名注册后通知监听器做相应处理
 			getReaderContext().fireAliasRegistered(name, alias, extractSource(ele));
 		}
 	}
@@ -307,7 +316,6 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 			try {
 				// Register the final decorated instance.
-				//对解析后的 bdHolder 进行注册
 				BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder, getReaderContext().getRegistry());
 			}
 			catch (BeanDefinitionStoreException ex) {

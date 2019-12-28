@@ -98,6 +98,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 			synchronized (getSingletonMutex()) {
 				Object object = this.factoryBeanObjectCache.get(beanName);
 				if (object == null) {
+					//核心逻辑在doGetObjectFromFactoryBean(factory, beanName)方法中
 					object = doGetObjectFromFactoryBean(factory, beanName);
 					// Only post-process and store if not put there already during getObject() call above
 					// (e.g. because of circular reference processing triggered by custom getBean calls)
@@ -113,6 +114,9 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 							}
 							beforeSingletonCreation(beanName);
 							try {
+								//调用 ObjectFactory 的后处理器。
+								//尽可能保证所有 bean 初始化后都会调用注册的BeanPostProcessor 的 postProcessAfterlnitialization 方法进行处理，
+								//在实际开发过程中大可以针对此特性设计自己的业务逻辑。
 								object = postProcessObjectFromFactoryBean(object, beanName);
 							}
 							catch (Throwable ex) {
@@ -168,6 +172,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				}
 			}
 			else {
+				//核心逻辑：getObject()
 				object = factory.getObject();
 			}
 		}

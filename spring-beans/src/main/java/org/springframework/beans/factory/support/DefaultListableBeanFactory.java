@@ -726,7 +726,6 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Iterate over a copy to allow for init methods which in turn register new bean definitions.
 		// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
-		//可能需要实例化的bean（可能：lazy，scope（单例singleton需要缓存，而原型prototype不需要缓存）（缓存即一开始实例化出来放在一个Map中））
 		List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
 
 		// Trigger initialization of all non-lazy singleton beans...
