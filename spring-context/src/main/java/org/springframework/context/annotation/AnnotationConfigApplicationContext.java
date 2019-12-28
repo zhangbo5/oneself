@@ -83,9 +83,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * e.g. {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
-		//实例化beanFactory
 		this();
-		//this.beanDefinitionMap.put(beanName, beanDefinition) 把传进来的bean(这里即annotatedClasses)变成beanDefinition
 		register(annotatedClasses);
 		refresh();
 	}
