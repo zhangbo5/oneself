@@ -261,6 +261,7 @@ class BeanDefinitionValueResolver {
 	 * @param value the original value (may be an expression)
 	 * @return the resolved value if necessary, or the original String value
 	 */
+	// 属性填充的时候调用了evaluateBeanDefinitionString(...)
 	@Nullable
 	private Object doEvaluate(@Nullable String value) {
 		return this.beanFactory.evaluateBeanDefinitionString(value, this.beanDefinition);

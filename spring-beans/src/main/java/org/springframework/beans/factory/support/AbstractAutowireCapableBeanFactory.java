@@ -542,7 +542,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
-			//根据指定bean使用对应的策略创建新的实例，如:工厂方法、构造函数自动注入、简单初始化。
+			// 根据指定bean使用对应的策略创建新的实例，如:工厂方法、构造函数自动注入、简单初始化。
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		final Object bean = instanceWrapper.getWrappedInstance();
@@ -580,8 +580,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+			// 填充bean
 			populateBean(beanName, mbd, instanceWrapper);
-			//初始化bean,对应bean的 init-method 属性配置指定的方法
+			// 初始化bean,对应bean的 init-method 属性配置指定的方法
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -1354,6 +1355,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (pvs != null) {
+			// 周用 AbstractAutowireCapableBeanFactory 类的 applyPropertyValues 函数来完成属性填充
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}
@@ -1555,6 +1557,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param bw the BeanWrapper wrapping the target object
 	 * @param pvs the new property values
 	 */
+	// Spring 在 bean 进行初始化时候的属性填充通过调用 AbstractAutowireCapableBeanFactory 类的 applyPropertyValues 函数来完成
 	protected void applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrapper bw, PropertyValues pvs) {
 		if (pvs.isEmpty()) {
 			return;
@@ -1590,6 +1593,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (converter == null) {
 			converter = bw;
 		}
+		// 构造 BeanDefinitionValueResolver 类型实例 valueResolver 来进行属性值的解析。
 		BeanDefinitionValueResolver valueResolver = new BeanDefinitionValueResolver(this, beanName, mbd, converter);
 
 		// Create a deep copy, resolving any references for values.

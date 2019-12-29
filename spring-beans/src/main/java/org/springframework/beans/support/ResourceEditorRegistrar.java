@@ -97,6 +97,8 @@ public class ResourceEditorRegistrar implements PropertyEditorRegistrar {
 	 * @see org.springframework.beans.propertyeditors.ClassArrayEditor
 	 * @see org.springframework.core.io.support.ResourceArrayPropertyEditor
 	 */
+	// registerCustomEditors 方法实现了批量注册的功能
+	// ResourceEditorRegistrar 类的 registerCustomEditors 方法的核心功能，其实无非是注册了一系列的常用类型的属性编辑器，
 	@Override
 	public void registerCustomEditors(PropertyEditorRegistry registry) {
 		ResourceEditor baseEditor = new ResourceEditor(this.resourceLoader, this.propertyResolver);
@@ -129,6 +131,7 @@ public class ResourceEditorRegistrar implements PropertyEditorRegistrar {
 			((PropertyEditorRegistrySupport) registry).overrideDefaultEditor(requiredType, editor);
 		}
 		else {
+			// 关键代码
 			registry.registerCustomEditor(requiredType, editor);
 		}
 	}

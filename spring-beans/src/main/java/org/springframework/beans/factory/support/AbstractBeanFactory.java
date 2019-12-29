@@ -1162,6 +1162,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 */
 	protected void initBeanWrapper(BeanWrapper bw) {
 		bw.setConversionService(getConversionService());
+		// 在 bean 的初始化后会调用 ResourceEditorRegistrar 的 registerCustomEditors 方法进行批量的通用属性编辑器注册。
 		registerCustomEditors(bw);
 	}
 
@@ -1454,6 +1455,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * @return the resolved value
 	 * @see #setBeanExpressionResolver
 	 */
+	// 通过 AbstractBeanFactory 中的 evaluateBeanDefinitionString 方法去完成 SpEL 的解析。
 	@Nullable
 	protected Object evaluateBeanDefinitionString(@Nullable String value, @Nullable BeanDefinition beanDefinition) {
 		if (this.beanExpressionResolver == null) {

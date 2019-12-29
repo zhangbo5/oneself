@@ -1078,6 +1078,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				if (value instanceof String) {
 					String strVal = resolveEmbeddedValue((String) value);
 					BeanDefinition bd = (beanName != null && containsBean(beanName) ? getMergedBeanDefinition(beanName) : null);
+					// 解析依赖注入 bean 的时候调用了 evaluateBeanDefinitionString(...)
 					value = evaluateBeanDefinitionString(strVal, bd);
 				}
 				TypeConverter converter = (typeConverter != null ? typeConverter : getTypeConverter());
