@@ -44,7 +44,7 @@ import org.springframework.util.Assert;
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @since 2.0
- * @see org.springframework.aop.aspectj.annotation.AspectJAdvisorFactory
+ * @see AspectJAdvisorFactory
  */
 @SuppressWarnings("serial")
 public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorAutoProxyCreator {
@@ -89,9 +89,13 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	@Override
 	protected List<Advisor> findCandidateAdvisors() {
 		// Add all the Spring advisors found according to superclass rules.
+		// 当使用注解方式配置 AOP 的时候并不是丢弃了对 XML 配置的支持，在这里调用父类方法加载配置文件中的 AOP 声明
 		List<Advisor> advisors = super.findCandidateAdvisors();
 		// Build Advisors for all AspectJ aspects in the bean factory.
 		if (this.aspectJAdvisorsBuilder != null) {
+			// 核心代码：对 Advisor 的提取
+			// 除了保留父类的获取配置文件中定义的增强外，同时添加了获取Bean 的注解增强的功能，
+			// 其实现正是由 this.aspectJAdvisorsBuilder.buildAspectJAdvisors() 来实现的。
 			advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
 		}
 		return advisors;

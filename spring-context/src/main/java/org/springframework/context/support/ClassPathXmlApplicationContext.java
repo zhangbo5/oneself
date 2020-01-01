@@ -139,10 +139,11 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 			throws BeansException {
 
 		super(parent);
-		//6.1 设置配置路径
+		// 6.1 设置配置路径
 		setConfigLocations(configLocations);
 		if (refresh) {
-			//refresh 函数中包含了几乎 ApplicationContext 中提供的全部功能
+			// 6.2 扩展功能
+			// refresh 函数中包含了几乎 ApplicationContext 中提供的全部功能
 			refresh();
 		}
 	}
@@ -157,8 +158,8 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @param path relative (or absolute) path within the class path
 	 * @param clazz the class to load resources with (basis for the given paths)
 	 * @throws BeansException if context creation failed
-	 * @see org.springframework.core.io.ClassPathResource#ClassPathResource(String, Class)
-	 * @see org.springframework.context.support.GenericApplicationContext
+	 * @see ClassPathResource#ClassPathResource(String, Class)
+	 * @see GenericApplicationContext
 	 * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 	 */
 	public ClassPathXmlApplicationContext(String path, Class<?> clazz) throws BeansException {
@@ -171,8 +172,8 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @param paths array of relative (or absolute) paths within the class path
 	 * @param clazz the class to load resources with (basis for the given paths)
 	 * @throws BeansException if context creation failed
-	 * @see org.springframework.core.io.ClassPathResource#ClassPathResource(String, Class)
-	 * @see org.springframework.context.support.GenericApplicationContext
+	 * @see ClassPathResource#ClassPathResource(String, Class)
+	 * @see GenericApplicationContext
 	 * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 	 */
 	public ClassPathXmlApplicationContext(String[] paths, Class<?> clazz) throws BeansException {
@@ -187,8 +188,8 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @param clazz the class to load resources with (basis for the given paths)
 	 * @param parent the parent context
 	 * @throws BeansException if context creation failed
-	 * @see org.springframework.core.io.ClassPathResource#ClassPathResource(String, Class)
-	 * @see org.springframework.context.support.GenericApplicationContext
+	 * @see ClassPathResource#ClassPathResource(String, Class)
+	 * @see GenericApplicationContext
 	 * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 	 */
 	public ClassPathXmlApplicationContext(String[] paths, Class<?> clazz, @Nullable ApplicationContext parent)

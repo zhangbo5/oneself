@@ -77,8 +77,8 @@ import org.springframework.util.StringUtils;
  * <p>Any number of {@link TargetSourceCreator} implementations can be used to create
  * a custom target source: for example, to pool prototype objects. Auto-proxying will
  * occur even if there is no advice, as long as a TargetSourceCreator specifies a custom
- * {@link org.springframework.aop.TargetSource}. If there are no TargetSourceCreators set,
- * or if none matches, a {@link org.springframework.aop.target.SingletonTargetSource}
+ * {@link TargetSource}. If there are no TargetSourceCreators set,
+ * or if none matches, a {@link SingletonTargetSource}
  * will be used by default to wrap the target bean instance.
  *
  * @author Juergen Hoeller
@@ -160,7 +160,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	/**
 	 * Specify the {@link AdvisorAdapterRegistry} to use.
 	 * <p>Default is the global {@link AdvisorAdapterRegistry}.
-	 * @see org.springframework.aop.framework.adapter.GlobalAdvisorAdapterRegistry
+	 * @see GlobalAdvisorAdapterRegistry
 	 */
 	public void setAdvisorAdapterRegistry(AdvisorAdapterRegistry advisorAdapterRegistry) {
 		this.advisorAdapterRegistry = advisorAdapterRegistry;
@@ -297,8 +297,10 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	@Override
 	public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) throws BeansException {
 		if (bean != null) {
+			// 根据给定的 bean 的 class 和 name 构建出一个 key ，格式：beanClassName_beanName
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
 			if (this.earlyProxyReferences.remove(cacheKey) != bean) {
+				// 如果它适合被代理，则需要封装指定 bean
 				return wrapIfNecessary(bean, beanName, cacheKey);
 			}
 		}
@@ -335,21 +337,28 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @return a proxy wrapping the bean, or the raw bean instance as-is
 	 */
 	protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+		// 如果已经处理过
 		if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
 			return bean;
 		}
+		// 无须增强
 		if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
 			return bean;
 		}
+		// 给定的 bean 类是否代表一个基础设施类，基础设施类不应代理，或者配置了指定 bean 不需要自动代理
 		if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
 			this.advisedBeans.put(cacheKey, Boolean.FALSE);
 			return bean;
 		}
 
 		// Create proxy if we have advice.
+		// 如果存在增强方法则创建代理
+		// 真正创建代理的代码是从 getAdvicesAndAdvisorsForBean 开始的
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
+		// 如果获取到了增强则需要针对增强创建代理
 		if (specificInterceptors != DO_NOT_PROXY) {
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
+			// 创建代理
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
 			this.proxyTypes.put(cacheKey, proxy.getClass());
@@ -367,9 +376,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * AopInfrastructureBeans as infrastructure classes.
 	 * @param beanClass the class of the bean
 	 * @return whether the bean represents an infrastructure class
-	 * @see org.aopalliance.aop.Advice
-	 * @see org.springframework.aop.Advisor
-	 * @see org.springframework.aop.framework.AopInfrastructureBean
+	 * @see Advice
+	 * @see Advisor
+	 * @see AopInfrastructureBean
 	 * @see #shouldSkip
 	 */
 	protected boolean isInfrastructureClass(Class<?> beanClass) {
