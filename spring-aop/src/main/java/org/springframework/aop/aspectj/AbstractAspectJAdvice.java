@@ -622,7 +622,7 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 	protected Object invokeAdviceMethod(
 			@Nullable JoinPointMatch jpMatch, @Nullable Object returnValue, @Nullable Throwable ex)
 			throws Throwable {
-
+		// 激活增强方法
 		return invokeAdviceMethodWithGivenArgs(argBinding(getJoinPoint(), jpMatch, returnValue, ex));
 	}
 
@@ -641,6 +641,8 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 		try {
 			ReflectionUtils.makeAccessible(this.aspectJAdviceMethod);
 			// TODO AopUtils.invokeJoinpointUsingReflection
+			// 激活增强方法
+			// invokeAdviceMethodWithGivenArgs 方法中的 aspectJAdviceMethod 正是对于前置增强的方法，在这里实现了调用。
 			return this.aspectJAdviceMethod.invoke(this.aspectInstanceFactory.getAspectInstance(), actualArgs);
 		}
 		catch (IllegalArgumentException ex) {
