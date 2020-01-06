@@ -76,7 +76,7 @@ public abstract class AopUtils {
 	 * {@link Proxy#isProxyClass(Class)} by additionally checking if the
 	 * given object is an instance of {@link SpringProxy}.
 	 * @param object the object to check
-	 * @see java.lang.reflect.Proxy#isProxyClass
+	 * @see Proxy#isProxyClass
 	 */
 	public static boolean isJdkDynamicProxy(@Nullable Object object) {
 		return (object instanceof SpringProxy && Proxy.isProxyClass(object.getClass()));
@@ -100,7 +100,7 @@ public abstract class AopUtils {
 	 * @param candidate the instance to check (might be an AOP proxy)
 	 * @return the target class (or the plain class of the given object as fallback;
 	 * never {@code null})
-	 * @see org.springframework.aop.TargetClassAware#getTargetClass()
+	 * @see TargetClassAware#getTargetClass()
 	 * @see org.springframework.aop.framework.AopProxyUtils#ultimateTargetClass(Object)
 	 */
 	public static Class<?> getTargetClass(Object candidate) {
@@ -144,7 +144,7 @@ public abstract class AopUtils {
 
 	/**
 	 * Determine whether the given method is an "equals" method.
-	 * @see java.lang.Object#equals
+	 * @see Object#equals
 	 */
 	public static boolean isEqualsMethod(@Nullable Method method) {
 		return ReflectionUtils.isEqualsMethod(method);
@@ -152,7 +152,7 @@ public abstract class AopUtils {
 
 	/**
 	 * Determine whether the given method is a "hashCode" method.
-	 * @see java.lang.Object#hashCode
+	 * @see Object#hashCode
 	 */
 	public static boolean isHashCodeMethod(@Nullable Method method) {
 		return ReflectionUtils.isHashCodeMethod(method);
@@ -160,7 +160,7 @@ public abstract class AopUtils {
 
 	/**
 	 * Determine whether the given method is a "toString" method.
-	 * @see java.lang.Object#toString()
+	 * @see Object#toString()
 	 */
 	public static boolean isToStringMethod(@Nullable Method method) {
 		return ReflectionUtils.isToStringMethod(method);
@@ -168,7 +168,7 @@ public abstract class AopUtils {
 
 	/**
 	 * Determine whether the given method is a "finalize" method.
-	 * @see java.lang.Object#finalize()
+	 * @see Object#finalize()
 	 */
 	public static boolean isFinalizeMethod(@Nullable Method method) {
 		return (method != null && method.getName().equals("finalize") &&
@@ -181,7 +181,7 @@ public abstract class AopUtils {
 	 * is one. E.g. the method may be {@code IFoo.bar()} and the target class
 	 * may be {@code DefaultFoo}. In this case, the method may be
 	 * {@code DefaultFoo.bar()}. This enables attributes on that method to be found.
-	 * <p><b>NOTE:</b> In contrast to {@link org.springframework.util.ClassUtils#getMostSpecificMethod},
+	 * <p><b>NOTE:</b> In contrast to {@link ClassUtils#getMostSpecificMethod},
 	 * this method resolves Java 5 bridge methods in order to retrieve attributes
 	 * from the <i>original</i> method definition.
 	 * @param method the method to be invoked, which may come from an interface
@@ -189,7 +189,7 @@ public abstract class AopUtils {
 	 * May be {@code null} or may not even implement the method.
 	 * @return the specific target method, or the original method if the
 	 * {@code targetClass} doesn't implement it or is {@code null}
-	 * @see org.springframework.util.ClassUtils#getMostSpecificMethod
+	 * @see ClassUtils#getMostSpecificMethod
 	 */
 	public static Method getMostSpecificMethod(Method method, @Nullable Class<?> targetClass) {
 		Class<?> specificTargetClass = (targetClass != null ? ClassUtils.getUserClass(targetClass) : null);
@@ -301,11 +301,14 @@ public abstract class AopUtils {
 	 * @return sublist of Advisors that can apply to an object of the given class
 	 * (may be the incoming List as-is)
 	 */
+	// findAdvisorsThatCanApply 函数的主要功能是寻找所有增强器中适用于当前 class 的增强器。
+	// 引介增强与普通的增强处理是不一样的，所以分开处理。而对于真正的匹配在 canApply 中实现。
 	public static List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> clazz) {
 		if (candidateAdvisors.isEmpty()) {
 			return candidateAdvisors;
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
+		// 首先处理引介增强
 		for (Advisor candidate : candidateAdvisors) {
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
@@ -313,10 +316,12 @@ public abstract class AopUtils {
 		}
 		boolean hasIntroductions = !eligibleAdvisors.isEmpty();
 		for (Advisor candidate : candidateAdvisors) {
+			// 引介增强已经处理
 			if (candidate instanceof IntroductionAdvisor) {
 				// already processed
 				continue;
 			}
+			// 对于普通 bean 的处理
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}
@@ -331,7 +336,7 @@ public abstract class AopUtils {
 	 * @param args the arguments for the method
 	 * @return the invocation result, if any
 	 * @throws Throwable if thrown by the target method
-	 * @throws org.springframework.aop.AopInvocationException in case of a reflection error
+	 * @throws AopInvocationException in case of a reflection error
 	 */
 	@Nullable
 	public static Object invokeJoinpointUsingReflection(@Nullable Object target, Method method, Object[] args)
