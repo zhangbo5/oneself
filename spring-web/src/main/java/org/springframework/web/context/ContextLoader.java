@@ -274,12 +274,14 @@ public class ContextLoader {
 		try {
 			// Store context in local instance variable, to guarantee that
 			// it is available on ServletContext shutdown.
+			// 创建一个ApplicationContext，默认是WebApplicationContext
 			if (this.context == null) {
 				this.context = createWebApplicationContext(servletContext);
 			}
 			if (this.context instanceof ConfigurableWebApplicationContext) {
 				ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) this.context;
 				if (!cwac.isActive()) {
+					// 第一次初始化设置父容器
 					// The context has not yet been refreshed -> provide services such as
 					// setting the parent context, setting the application context id, etc
 					if (cwac.getParent() == null) {
@@ -288,6 +290,7 @@ public class ContextLoader {
 						ApplicationContext parent = loadParentContext(servletContext);
 						cwac.setParent(parent);
 					}
+					// 容器初始化
 					configureAndRefreshWebApplicationContext(cwac, servletContext);
 				}
 			}
@@ -406,6 +409,7 @@ public class ContextLoader {
 		}
 
 		customizeContext(sc, wac);
+		// 调用了容器的refresh方法，这里开始真正的进行容器的初始化逻辑。
 		wac.refresh();
 	}
 
