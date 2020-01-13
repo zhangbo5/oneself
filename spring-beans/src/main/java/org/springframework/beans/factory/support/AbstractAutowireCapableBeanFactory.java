@@ -85,7 +85,7 @@ import org.springframework.util.StringUtils;
 /**
  * Abstract bean factory superclass that implements default bean creation,
  * with the full capabilities specified by the {@link RootBeanDefinition} class.
- * Implements the {@link org.springframework.beans.factory.config.AutowireCapableBeanFactory}
+ * Implements the {@link AutowireCapableBeanFactory}
  * interface in addition to AbstractBeanFactory's {@link #createBean} method.
  *
  * <p>Provides bean creation (with constructor resolution), property population,
@@ -267,7 +267,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * BeanFactoryAware or ApplicationContext through ApplicationContextAware.
 	 * <p>By default, only the BeanFactoryAware interface is ignored.
 	 * For further types to ignore, invoke this method for each type.
-	 * @see org.springframework.beans.factory.BeanFactoryAware
+	 * @see BeanFactoryAware
 	 * @see org.springframework.context.ApplicationContextAware
 	 */
 	public void ignoreDependencyInterface(Class<?> ifc) {
@@ -472,9 +472,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Prepare method overrides.
-		//验证及准备覆盖的方法
+		// 验证及准备覆盖的方法
 		try {
-			//5.5.1 处理 override 属性
+			// 5.5.1 处理override属性
 			mbdToUse.prepareMethodOverrides();
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -484,13 +484,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			//5.5.2 实例化的前置处理
-			//给 BeanPostProcessors 一个机会来返回代理来替代真正的实例
+			// 5.5.2 实例化的前置处理
+			// ① 创建bean前会尝试返回一个该bean的代理对象（给BeanPostProcessors一个机会来返回代理来替代真正的实例）
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
-			//当经历过 resolveBeforelnstantiation 方法后，程序有两个选择：
-			//如果创建了代理或者说重写了InstantiationAwareBeanPostProcessor的postProcessBeforelnstantiation方法
-			//并在方法postProcessBeforelnstantiation中改变了bean，则直接返回就可以了；否则，需要进行常规bean的创建，
-			//而这常规bean的创建就是在doCreateBean中完成的。
+			// 当经历过resolveBeforelnstantiation方法后，程序有两个选择：
+			// 如果创建了代理或者说重写了InstantiationAwareBeanPostProcessor的postProcessBeforelnstantiation方法
+			// 并在方法postProcessBeforelnstantiation中改变了bean，则直接返回就可以了；否则，需要进行常规bean的创建，
+			// 而这常规bean的创建就是在doCreateBean中完成的。
 			if (bean != null) {
 				return bean;
 			}
@@ -501,7 +501,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
-			//常规bean的创建在doCreateBean中完成。
+			// ② 如果有代理对象会直接返回，没有的话会执行doCreateBean方法，开始bean初始化逻辑。常规bean的创建在doCreateBean中完成。
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Finished creating instance of bean '" + beanName + "'");
@@ -537,12 +537,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			throws BeanCreationException {
 
 		// Instantiate the bean.
+		// 实例化bean
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
-			// 根据指定bean使用对应的策略创建新的实例，如:工厂方法、构造函数自动注入、简单初始化。
+			// ① 通过工厂方法或者构造器方法创建bean实例。（根据指定bean使用对应的策略创建新的实例，如:工厂方法、构造函数自动注入、简单初始化。）
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		final Object bean = instanceWrapper.getWrappedInstance();
@@ -552,9 +553,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Allow post-processors to modify the merged bean definition.
+		// 允许后置处理器对bean进行增强处理
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
+					// ② 调用applyMergedBeanDefinitionPostProcessors方法，执行MergedBeanDefinitionPostProcessor类型的后置处理器的postProcessMergedBeanDefinition方法
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
 				catch (Throwable ex) {
@@ -580,9 +583,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
-			// 填充bean
+			// ③ 调用populateBean方法，给bean的属性赋值
 			populateBean(beanName, mbd, instanceWrapper);
-			// 初始化bean,对应bean的 init-method 属性配置指定的方法
+			// ④ 调用initializeBean方法初始化bean（初始化bean，对应bean的init-method属性配置指定的方法）
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -624,7 +627,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Register bean as disposable.
 		try {
-			//5.7.5 注册 DisposableBean
+			// 5.7.5 注册 DisposableBean
+			// ⑤ 调用registerDisposableBeanIfNecessary方法注册bean销毁方法，也就是bean实现DisposableBean接口的destroy方法。（bean创建出来后，会在DefaultSingletonBeanRegistry类中执行addSingleton方法，将新建出单例bean放入缓存中。）
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -1195,8 +1199,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param beanClass the raw class of the bean
 	 * @param beanName the name of the bean
 	 * @return the candidate constructors, or {@code null} if none specified
-	 * @throws org.springframework.beans.BeansException in case of errors
-	 * @see org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors
+	 * @throws BeansException in case of errors
+	 * @see SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors
 	 */
 	@Nullable
 	protected Constructor<?>[] determineConstructorsFromBeanPostProcessors(@Nullable Class<?> beanClass, String beanName)
@@ -1451,7 +1455,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param mbd the merged bean definition the bean was created with
 	 * @param bw the BeanWrapper the bean was created with
 	 * @return an array of bean property names
-	 * @see org.springframework.beans.BeanUtils#isSimpleProperty
+	 * @see BeanUtils#isSimpleProperty
 	 */
 	protected String[] unsatisfiedNonSimpleProperties(AbstractBeanDefinition mbd, BeanWrapper bw) {
 		Set<String> result = new TreeSet<>();
@@ -1473,7 +1477,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param cache whether to cache filtered PropertyDescriptors for the given bean Class
 	 * @return the filtered PropertyDescriptors
 	 * @see #isExcludedFromDependencyCheck
-	 * @see #filterPropertyDescriptorsForDependencyCheck(org.springframework.beans.BeanWrapper)
+	 * @see #filterPropertyDescriptorsForDependencyCheck(BeanWrapper)
 	 */
 	protected PropertyDescriptor[] filterPropertyDescriptorsForDependencyCheck(BeanWrapper bw, boolean cache) {
 		PropertyDescriptor[] filtered = this.filteredPropertyDescriptorsCache.get(bw.getWrappedClass());
@@ -1527,7 +1531,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param mbd the merged bean definition the bean was created with
 	 * @param pds the relevant property descriptors for the target bean
 	 * @param pvs the property values to be applied to the bean
-	 * @see #isExcludedFromDependencyCheck(java.beans.PropertyDescriptor)
+	 * @see #isExcludedFromDependencyCheck(PropertyDescriptor)
 	 */
 	protected void checkDependencies(
 			String beanName, AbstractBeanDefinition mbd, PropertyDescriptor[] pds, PropertyValues pvs)

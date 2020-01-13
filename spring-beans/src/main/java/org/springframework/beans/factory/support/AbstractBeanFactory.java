@@ -235,7 +235,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * @return an instance of the bean
 	 * @throws BeansException if the bean could not be created
 	 */
-	@SuppressWarnings("unchecked")
+	/** bean真正初始化是在AbstractBeanFactory类的doGetBean方法中
+	 * 1. 创建前先尝试从单列bean集合中获取该bean，如果bean曾经被创建的话，会缓存到这个容器中，此时无需重复创建
+	 * 2. bean没被缓存过的话开始执行创建流程
+	 * 3. 如果这个bean是在父容器中创建的，那么让父容器执行doGetBean方法
+	 * 4. 给需要创建的bean做个标记，表示在创建了，防止其他线程创建该bean
+	 * 5. 查找该bean依赖的其他bean，如果有依赖的，先创建这些依赖的bean
+	 * 6. 执行createBean方法创建bean【下面会继续讲怎么】
+	 * 7. 检查创建的bean是否类型匹配
+	 */
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
 			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
 
@@ -244,7 +252,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object bean;
 
 		// Eagerly check singleton cache for manually registered singletons.
-		//直接尝试从缓存或者singletonFactories中的ObjectFactory中获取
+		// 直接尝试从缓存或者singletonFactories中的ObjectFactory中获取，如果能获取到，说明之前创建过
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isDebugEnabled()) {
@@ -264,13 +272,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		else {
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
-			//出现循环依赖抛出异常，isPrototypeCurrentlyInCreation(beanName)=true则存在循环依赖
+			// 未从缓存中获取到bean，开始bean的创建流程。出现循环依赖抛出异常，isPrototypeCurrentlyInCreation(beanName)=true则存在循环依赖
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
 			// Check if bean definition exists in this factory.
-			//如果parentBeanFactory中也就是在所有已经加载的类中不包含beanName，则尝试从parentBeanFactory中检测
+			// 父容器中有该BeanDefinition的话，让父容器创建该bean。（如果parentBeanFactory中也就是在所有已经加载的类中不包含beanName，则尝试从parentBeanFactory中检测）
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			//containsBeanDefinition(beanName):如果当前加载的 XML 配置文件中不包含 beanName 所对应的配置，
 			// 就只能到 parentBeanFactory 去尝试下了，然后再去递归的调用 getBean 方法 。
@@ -290,7 +298,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					return parentBeanFactory.getBean(nameToLookup, requiredType);
 				}
 			}
-			//如果不是仅仅做类型检查则是创建bean，要进行记录
+			// 标记该bean已创建。如果不是仅仅做类型检查则是创建bean，要进行记录
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);
 			}
@@ -300,6 +308,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on.
+				// 获取bean依赖的其他bean，如果有依赖bean的话，先把这些依赖的bean创建出来
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
@@ -320,6 +329,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 
 				// Create bean instance.
+				// 单实例bean的创建
 				if (mbd.isSingleton()) {
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
