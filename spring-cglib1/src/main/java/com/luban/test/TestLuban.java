@@ -6,7 +6,7 @@ import com.luban.service.TestService;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-public class Test {
+public class TestLuban {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext
 				annotationConfigApplicationContext
