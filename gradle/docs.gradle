@@ -176,7 +176,7 @@ task distZip(type: Zip, dependsOn: [docsZip, schemaZip]) {
 	ext.baseDir = "${baseName}-${project.version}";
 
 	from("src/docs/dist") {
-		include "readme.txt"
+		include "spring-readme.txt"
 		include "license.txt"
 		include "notice.txt"
 		into "${baseDir}"
